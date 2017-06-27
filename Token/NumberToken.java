@@ -1,7 +1,9 @@
 package src.Token;
 
+import src.CodeGeneration.FSM.StateMachine;
+
 public class NumberToken extends Token {
-    int intValue;
+    public int intValue;
     int registerAdr, memoryAdr;
 
     public NumberToken(int intValue, int registerAdr, int memoryAdr) {
@@ -9,5 +11,10 @@ public class NumberToken extends Token {
         this.intValue = intValue;
         this.registerAdr = registerAdr;
         this.memoryAdr = memoryAdr;
+    }
+
+    @Override
+    public StateMachine.Event getEvent() {
+        return StateMachine.Event.VALUE;
     }
 }

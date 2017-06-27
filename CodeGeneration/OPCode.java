@@ -1,9 +1,7 @@
 package src.CodeGeneration;
 
-import static javax.swing.text.StyleConstants.Size;
-
 public class OPCode {
-    public  enum OPCODE_8 {
+    public enum OPCODE_8 {
         // opcode : 8bit
         
         NOP("00000000"),
@@ -55,6 +53,7 @@ public class OPCode {
         ADD("1011"),
         SUB("1100"),
         MUL("1101"),
+        DIV("1101"), // TODO : SAYEH hasn't this instruction
         CMP("1110");
 
         private String opcode;
@@ -87,14 +86,42 @@ public class OPCode {
     }
 
     public static String getOpcode(OPCODE_16_I opcode, String I){
+        if(I.length() != 8){
+            try {
+                throw new Exception("Wrong immediate size");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         return opcode.toString() + I;
     }
 
     public static String getOpcode(OPCODE_8_DS opcode, String D, String S){
+        if(D.length() != 2 || S.length() != 2){
+            try {
+                throw new Exception("Wrong register address");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         return opcode.toString() + D + S;
     }
 
-    public String getOpcode(OPCODE_16_DI opcode, String D, String I){
+    public static String getOpcode(OPCODE_16_DI opcode, String D, String I){
+        if(D.length() != 2){
+            try {
+                throw new Exception("Wrong register address");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        if(I.length() != 8){
+            try {
+                throw new Exception("Wrong immediate size");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         return "1111" + D + opcode.toString() + I;
     }
 

@@ -1,6 +1,7 @@
 package src;
 
 import src.Analyze.Lexical.LexicalAnalyzer;
+import src.CodeGeneration.CodeGenerator;
 
 
 public class Main {
@@ -9,8 +10,12 @@ public class Main {
 
         LexicalAnalyzer.removeComments(sourceDir, "test1.c");
         LexicalAnalyzer.tokenize();
+        CodeGenerator.getGenerator().generate();
 
-        System.out.printf(ClassifiedData.getInstance().fileReader.fileContent);
+        for(String op : ClassifiedData.getInstance().opcodes) {
+            System.out.printf(op);
+        }
+
 
     }
 }

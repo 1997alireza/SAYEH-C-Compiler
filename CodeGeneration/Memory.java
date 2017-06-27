@@ -4,10 +4,12 @@ public class Memory {
     private static final int SAYEH_MEMORY_SIZE = 1024;
     private String memNames[];
     private boolean isAllocated[];
+    private boolean isTemp[];
     private static Memory RAM;
     private Memory(){
         memNames = new String[SAYEH_MEMORY_SIZE];
         isAllocated = new boolean[SAYEH_MEMORY_SIZE];
+        isTemp = new boolean[SAYEH_MEMORY_SIZE];
     }
 
     public static Memory getRAM (){
@@ -21,6 +23,7 @@ public class Memory {
         for(int i = 0; i < SAYEH_MEMORY_SIZE; i++){
             if(!isAllocated[i]){
                 isAllocated[i] = true;
+                isTemp[i] = true;
                 memNames[i] = "temp" + i;
                 return memNames[i];
             }
@@ -57,6 +60,7 @@ public class Memory {
         for(int i = 0; i < SAYEH_MEMORY_SIZE; i++){
             if(!isAllocated[i]){
                 isAllocated[i] = true;
+                isTemp[i] = false;
                 memNames[i] = name;
                 return i;
             }
@@ -82,6 +86,14 @@ public class Memory {
             throw new Exception("Can't find this memory name");
         } catch (Exception e) {
             e.printStackTrace();
+        }
+    }
+
+    public void freeTemps() {
+        for(int i = 0; i < SAYEH_MEMORY_SIZE; i++){
+            if(isAllocated[i] && isTemp[i]){
+                isAllocated[i] = false;
+            }
         }
     }
 

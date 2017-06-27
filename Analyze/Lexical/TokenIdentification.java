@@ -5,11 +5,11 @@ import src.Token.Token;
 public class TokenIdentification {
 
     public static final String [] KeywordTokens = {"if", "else", "while", "int", "char", "bool", "null", "true", "false"};
-    public static final String [] OperatorTokens = {"=", "+=", "-=", "*=", "/=", "%=",
+    public static final String [] OperatorTokens = {"=", "+=", "-=", "*=", "/=",
                                              "&&", "||", "!",
                                              "==", "!=", ">", "<", ">=", "<=",
                                              "+", "-", "*", "/", "++", "--"};
-    public static final String [] PunctuationTokens = {",", ")", "(", "}", "{", ":", ";"};
+    public static final String [] PunctuationTokens = {",", ")", "(", "}", "{", ";"};
 
     public static Token.TOKEN_TYPE getTokenType(String token){
         if(token == null)
