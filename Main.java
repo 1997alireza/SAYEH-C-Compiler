@@ -13,7 +13,7 @@ public class Main {
         CodeGenerator.getGenerator().generate();
 
         for(String op : ClassifiedData.getInstance().opcodes) {
-            System.out.printf(op);
+            System.out.println(op);
         }
 
 

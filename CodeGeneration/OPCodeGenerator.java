@@ -9,26 +9,25 @@ import java.util.Stack;
 public class OPCodeGenerator {
     public static void loadNum(int num, String regAdr){
         String b = toBin(num, 16);
-        ArrayList<String> opcodes = ClassifiedData.getInstance().opcodes;
-        opcodes.add(OPCode.getOpcode(OPCode.OPCODE_16_DI.MIL, regAdr, b.substring(8, 16)));
-        opcodes.add(OPCode.getOpcode(OPCode.OPCODE_16_DI.MIH, regAdr, b.substring(0, 8)));
+        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_16_DI.MIL, regAdr, b.substring(8, 16)));
+        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_16_DI.MIH, regAdr, b.substring(0, 8)));
     }
 
     public static void loadMem(String name, String regAdr){ // mem -> reg
         int memSelPlace = Memory.getRAM().find(name);
         loadNum(memSelPlace, regAdr);
-        ClassifiedData.getInstance().opcodes.add(OPCode.getOpcode(OPCode.OPCODE_8_DS.LDA, regAdr, regAdr));
+        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_8_DS.LDA, regAdr, regAdr));
     }
 
     public static void loadMem(int memSelPlace, String regAdr){ // mem -> reg
         loadNum(memSelPlace, regAdr);
-        ClassifiedData.getInstance().opcodes.add(OPCode.getOpcode(OPCode.OPCODE_8_DS.LDA, regAdr, regAdr));
+        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_8_DS.LDA, regAdr, regAdr));
     }
 
     public static void storeMem(String name, String regAdr){ // reg -> mem
         int memSelPlace = Memory.getRAM().find(name);
         loadNum(memSelPlace, regAdr);
-        ClassifiedData.getInstance().opcodes.add(OPCode.getOpcode(OPCode.OPCODE_8_DS.STA, regAdr, regAdr));
+        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_8_DS.STA, regAdr, regAdr));
     }
 
     public static void loadOperand(Token token, String regAdr){ // ... -> reg
@@ -88,13 +87,12 @@ public class OPCodeGenerator {
 
                             switch (op.value) {
                                 case "!":
-                                    ClassifiedData.getInstance().opcodes.add(OPCode.getOpcode(OPCode.OPCODE_8_DS.NOT,
-                                            "00", "00"));
+                                    notRegister("00", "01");
                                     break;
                                 case "++":
                                     if(lastTokenIsIden){ // ++i(00)
                                         loadNum(1, "01");
-                                        ClassifiedData.getInstance().opcodes.add(OPCode.getOpcode(OPCode.OPCODE_8_DS.ADD,
+                                        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_8_DS.ADD,
                                                 "00", "01"));
                                         storeMem(opToken00.value, "00");
 
@@ -106,7 +104,7 @@ public class OPCodeGenerator {
                                         operands.add(new IdentifierToken(tempMem, -1, -1));
 
                                         loadNum(1, "01");
-                                        ClassifiedData.getInstance().opcodes.add(OPCode.getOpcode(OPCode.OPCODE_8_DS.ADD,
+                                        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_8_DS.ADD,
                                                 "00", "01"));
                                         storeMem(opToken00.value, "00");
                                     }
@@ -115,7 +113,7 @@ public class OPCodeGenerator {
                                 case "--":
                                     if(lastTokenIsIden){ // --i(00)
                                         loadNum(-1, "01");
-                                        ClassifiedData.getInstance().opcodes.add(OPCode.getOpcode(OPCode.OPCODE_8_DS.ADD,
+                                        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_8_DS.ADD,
                                                 "00", "01"));
                                         storeMem(opToken00.value, "00");
 
@@ -127,7 +125,7 @@ public class OPCodeGenerator {
                                         operands.add(new IdentifierToken(tempMem, -1, -1));
 
                                         loadNum(-1, "01");
-                                        ClassifiedData.getInstance().opcodes.add(OPCode.getOpcode(OPCode.OPCODE_8_DS.ADD,
+                                        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_8_DS.ADD,
                                                 "00", "01"));
                                         storeMem(opToken00.value, "00");
                                     }
@@ -141,33 +139,72 @@ public class OPCodeGenerator {
                                 loadOperand(operands.pop(), "01");
                                 switch (op.value) {
                                     case "&&":
-                                        ClassifiedData.getInstance().opcodes.add(OPCode.getOpcode(OPCode.OPCODE_8_DS.AND,
+                                        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_8_DS.AND,
                                                 "00", "01"));
                                         break;
                                     case "||":
-                                        ClassifiedData.getInstance().opcodes.add(OPCode.getOpcode(OPCode.OPCODE_8_DS.ORR,
+                                        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_8_DS.ORR,
                                                 "00", "01"));
                                         break;
                                     case "==":
+                                        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_8_DS.SUB,
+                                                "00", "01"));
+                                        notRegister("00", "01");
+                                        break;
                                     case "!=":
-                                    case ">":
-                                    case "<":
-                                    case ">=":
-                                    case "<=":
+                                        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_8_DS.SUB,
+                                                "00", "01"));
+                                        break;
+                                    case ">": // reg(01) > reg(00)
+                                        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_8_DS.CMP,
+                                                "00", "01"));
+                                        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_16_I.BRC,
+                                                "00000100"));
+                                        loadNum(0, "00"); // reg(01) <= reg(00)
+                                        jump(3);
+                                        loadNum(1, "00"); // reg(01) > reg(00)
+                                        break;
+                                    case "<": // reg(01) < reg(00)
+                                        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_8_DS.CMP,
+                                                "01", "00"));
+                                        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_16_I.BRC,
+                                                "00000100"));
+                                        loadNum(0, "00"); // reg(01) >= reg(00)
+                                        jump(3);
+                                        loadNum(1, "00"); // reg(01) < reg(00)
+                                        break;
+                                    case ">=": // reg(01) >= reg(00)
+                                        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_8_DS.CMP,
+                                                "01", "00"));
+                                        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_16_I.BRC,
+                                                "00000100"));
+                                        loadNum(1, "00"); // reg(01) >= reg(00)
+                                        jump(3);
+                                        loadNum(0, "00"); // reg(01) < reg(00)
+                                        break;
+                                    case "<=": // reg(01) <= reg(00)
+                                        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_8_DS.CMP,
+                                                "00", "01"));
+                                        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_16_I.BRC,
+                                                "00000100"));
+                                        loadNum(1, "00"); // reg(01) <= reg(00)
+                                        jump(3);
+                                        loadNum(0, "00"); // reg(01) > reg(00)
+                                        break;
                                     case "+":
-                                        ClassifiedData.getInstance().opcodes.add(OPCode.getOpcode(OPCode.OPCODE_8_DS.ADD,
+                                        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_8_DS.ADD,
                                                 "00", "01"));
                                         break;
                                     case "-": // D - S
-                                        ClassifiedData.getInstance().opcodes.add(OPCode.getOpcode(OPCode.OPCODE_8_DS.SUB,
+                                        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_8_DS.SUB,
                                                 "00", "01"));
                                         break;
                                     case "*":
-                                        ClassifiedData.getInstance().opcodes.add(OPCode.getOpcode(OPCode.OPCODE_8_DS.MUL,
+                                        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_8_DS.MUL,
                                                 "00", "01"));
                                         break;
                                     case "/":
-                                        ClassifiedData.getInstance().opcodes.add(OPCode.getOpcode(OPCode.OPCODE_8_DS.DIV,
+                                        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_8_DS.DIV,
                                                 "00", "01"));
                                         break;
                                 }
@@ -176,8 +213,6 @@ public class OPCodeGenerator {
                             String tempMem = Memory.getRAM().aloc();
                             storeMem(tempMem, "00");
                             operands.add(new IdentifierToken(tempMem, -1, -1));
-
-
                         }
                     }
 
@@ -196,6 +231,36 @@ public class OPCodeGenerator {
         }
 
         return -1   ;
+    }
+
+    private static void notRegister(String regAdr, String zeroKeeperRegAdr){ // true -> false, false -> true : false = 0
+        if(regAdr.length() != 2 || zeroKeeperRegAdr.length() != 2){
+            try {
+                throw new Exception("Wrong register address");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        if(regAdr.equals(zeroKeeperRegAdr)){
+            try {
+                throw new Exception("Same registers addresses");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
+        loadNum(0, zeroKeeperRegAdr);
+        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_8_DS.CMP, regAdr, zeroKeeperRegAdr));
+        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_16_I.BRZ, "00000100"));
+        loadNum(0, regAdr); // value of regAdr is true, set it to false
+        jump(3);
+        loadNum(1, regAdr); // value of regAdr is false, set it to true
+    }
+
+    private static void jump(int numOfLines){
+        String I = toBin(numOfLines, 8);
+        ClassifiedData.getInstance().addOpcode(OPCode.getOpcode(OPCode.OPCODE_16_I.JPR, I));
     }
 
     private static int getTopPriority(Stack<OperatorToken> operators){
@@ -256,9 +321,9 @@ public class OPCodeGenerator {
             case Character:
                 return new NumberToken(((CharacterToken)token).character, -1, -1);
             case Keyword:
-                if(token.value.equals("true"))
+                if(token.value.equals("true")) // true -> anything not zero
                     return new NumberToken(1, -1, -1);
-                if(token.value.equals("false"))
+                if(token.value.equals("false")) // false -> 0
                     return new NumberToken(0, -1, -1);
         }
 

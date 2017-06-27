@@ -190,6 +190,7 @@ public class CodeGenerator {
                 e.printStackTrace();
             }
         }
+        ClassifiedData.getInstance().onEndOfTokens();
     }
 
 }
