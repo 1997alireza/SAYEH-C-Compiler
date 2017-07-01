@@ -3,6 +3,8 @@ package src;
 import src.Analyze.Lexical.LexicalAnalyzer;
 import src.CodeGeneration.CodeGenerator;
 
+import java.util.ArrayList;
+
 
 public class Main {
     public static void main(String[] args) {
@@ -10,9 +12,13 @@ public class Main {
 
         LexicalAnalyzer.removeComments(sourceDir, "test1.c");
         LexicalAnalyzer.tokenize();
-        CodeGenerator.getGenerator().generate();
 
-        for(String op : ClassifiedData.getInstance().opcodes) {
+        ArrayList<String> opcodes = new ArrayList<>();
+        (new CodeGenerator(ClassifiedData.getInstance().tokens,
+                                    opcodes, "base generator")).generate();
+        ClassifiedData.getInstance().addOpcodes(opcodes);
+
+        for(String op : ClassifiedData.getInstance().getOpcodes()) {
             System.out.println(op);
         }
 

@@ -13,8 +13,12 @@ public class StateMachine {
 
     public ArrayList<Token> expression = new ArrayList<>();
     public Stack<IdentifierToken> variables = new Stack<>();
+    public ArrayList<Token> nestedTokens = new ArrayList<>();
 
-    public String getState(){
+    public int parenthesisNumber = 0, braceNumber = 0;
+
+
+    public String getState() {
         return state;
     }
 
@@ -27,7 +31,13 @@ public class StateMachine {
         IDENTIFIER("iden"),
         VALUE("val")/*true, false, character, number*/,
         COMMA(","),
-        SEMICOLON(";");
+        SEMICOLON(";"),
+        OPEN_PARENTHESIS("("),
+        CLOSE_PARENTHESIS(")"),
+        IF("if"),
+        ELSE("else"),
+        OPEN_BRACE("{"),
+        CLOSE_BRACE("}");
 
         private String str;
         Event(String str){

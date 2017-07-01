@@ -10,10 +10,10 @@ public class ClassifiedData {
     private static ClassifiedData instance;
     public CFileReader fileReader;
     public ArrayList<Token> tokens;
-    public ArrayList<String> opcodes;
+    private ArrayList<String> opcodes;
     private ClassifiedData(){
         instance = this;
-        tokens = new ArrayList<Token>();
+        tokens = new ArrayList<>();
         opcodes = new ArrayList<>();
 
         setupInitializeOpcodes();
@@ -26,35 +26,25 @@ public class ClassifiedData {
     }
 
     private void setupInitializeOpcodes(){ // clear WP and set to "000"
-        isAn8bitInstructionWaiting = true;
-        _8bitWaitingInstruction = OPCode.getOpcode(OPCode.OPCODE_8.CWP);
+        addOpcode(OPCode.getOpcode(OPCode.OPCODE_8.CWP));
     }
 
-    private boolean isAn8bitInstructionWaiting;
-    private String _8bitWaitingInstruction;
-    public void addOpcode(String opcode){ // to concat 8bit instructions and store them in one sel of the memory
+    private void addOpcode(String opcode){ // to concat 8bit instructions and store them in one sel of the memory
         if(opcode.length() == 8){
-            if(isAn8bitInstructionWaiting){
-                opcodes.add(_8bitWaitingInstruction + opcode);
-                isAn8bitInstructionWaiting = false;
-            }
-            else {
-                isAn8bitInstructionWaiting = true;
-                _8bitWaitingInstruction = opcode;
-            }
+            opcodes.add("00000000" + opcode);
         }
         else /*is 16*/ {
-            if(isAn8bitInstructionWaiting){
-                opcodes.add(_8bitWaitingInstruction + "00000000");
-                isAn8bitInstructionWaiting = false;
-            }
             opcodes.add(opcode);
         }
     }
-    public void onEndOfTokens(){
-        if(isAn8bitInstructionWaiting) {
-            opcodes.add(_8bitWaitingInstruction + "00000000");
-            isAn8bitInstructionWaiting = false;
+
+    public void addOpcodes(ArrayList<String> opcodes){
+        for(String op : opcodes){
+            addOpcode(op);
         }
+    }
+
+    public ArrayList<String> getOpcodes(){
+        return opcodes;
     }
 }

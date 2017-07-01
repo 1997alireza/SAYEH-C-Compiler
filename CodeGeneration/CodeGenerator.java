@@ -4,16 +4,17 @@ import org.statefulj.fsm.FSM;
 import org.statefulj.fsm.RetryException;
 import org.statefulj.fsm.TooBusyException;
 import org.statefulj.fsm.model.Action;
+import org.statefulj.fsm.model.impl.StateActionPairImpl;
 import org.statefulj.fsm.model.impl.StateImpl;
 import org.statefulj.fsm.model.State;
 import org.statefulj.persistence.memory.MemoryPersisterImpl;
-import src.ClassifiedData;
 import src.CodeGeneration.FSM.StateMachine;
 import src.Token.IdentifierToken;
 import src.Token.OperatorToken;
 import src.Token.PunctuationToken;
 import src.Token.Token;
 
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -22,31 +23,22 @@ public class CodeGenerator {
 
     private List<State<StateMachine>> states;
     private MemoryPersisterImpl<StateMachine> persister;
-    private State<StateMachine> start;
-    private State<StateMachine> def;
-    private State<StateMachine> def1;
-    private State<StateMachine> def2;
-    private State<StateMachine> def3;
-    private State<StateMachine> asg;
-    private State<StateMachine> asg1;
-    private State<StateMachine> asg2;
-    private State<StateMachine> advAsg1;
-    private State<StateMachine> advAsg2;
+    private State<StateMachine> start,
+                    def, def1, def2, def3,
+                    asg, asg1, asg2, advAsg1, advAsg2,
+                    cond, cond1, cond2, cond3, extraCond,  cond4, cond5, elseCond, elseExtraCond;
 
     private FSM fsm;
 
-    private static CodeGenerator instance = null;
-    public static CodeGenerator getGenerator(){
-        if(instance == null){
-            instance = new CodeGenerator();
-        }
-        return instance;
-    }
+    private OPCodeGenerator opCodeGenerator;
+    ArrayList<Token> inputTokens;
+    public CodeGenerator(ArrayList<Token> inputTokens, ArrayList<String> outputOpcodes, String fsmName){
+        this.inputTokens = inputTokens;
+        opCodeGenerator = new OPCodeGenerator(outputOpcodes);
 
-    private CodeGenerator(){
         states = new LinkedList<>();
-
         start = new StateImpl<>("start");
+        // TODO : define and valuation identifiers
         def = new StateImpl<>("def");
         def1 = new StateImpl<>("def 1");
         def2 = new StateImpl<>("def 2");
@@ -56,9 +48,17 @@ public class CodeGenerator {
         asg2 = new StateImpl<>("asg 2");
         advAsg1 = new StateImpl<>("adv asg 1");
         advAsg2 = new StateImpl<>("adv asg 2");
+        cond = new StateImpl<>("cond");
+        cond1 = new StateImpl<>("cond 1");
+        cond2 = new StateImpl<>("cond 2");
+        cond3 = new StateImpl<>("cond 3");
+        cond4 = new StateImpl<>("cond 4");
+        cond5 = new StateImpl<>("cond 5");
+        elseCond = new StateImpl<>("else cond");
+        extraCond = new StateImpl<>("extra cond");
+        elseExtraCond = new StateImpl<>("else extra cond");
 
-        start.addTransition(StateMachine.Event.KEYWORD_VAR.toString(), def);
-        start.addTransition(StateMachine.Event.IDENTIFIER.toString(), asg,
+        addStartStateTransitions(start, null,
                 new theAction<>(StateMachine.Action.ADD_IDENTIFIER_TO_VAR_STACK));
 
         def.addTransition(StateMachine.Event.IDENTIFIER.toString(), def1,
@@ -71,8 +71,14 @@ public class CodeGenerator {
 
         def2.addTransition(StateMachine.Event.VALUE.toString(), def3,
                 new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
+        def2.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), def3,
+                new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
 
         def3.addTransition(StateMachine.Event.VALUE.toString(), def3,
+                new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
+        def3.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), def3,
+                new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
+        def3.addTransition(StateMachine.Event.CLOSE_PARENTHESIS.toString(), def3,
                 new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
         def3.addTransition(StateMachine.Event.COMPUTABLE_OPERATOR.toString(), def3,
                 new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
@@ -85,24 +91,149 @@ public class CodeGenerator {
 
         asg1.addTransition(StateMachine.Event.VALUE.toString(), asg2,
                 new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
+        asg1.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), asg2,
+                new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
 
         asg2.addTransition(StateMachine.Event.VALUE.toString(), asg2,
+                new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
+        asg2.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), asg2,
+                new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
+        asg2.addTransition(StateMachine.Event.CLOSE_PARENTHESIS.toString(), asg2,
                 new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
         asg2.addTransition(StateMachine.Event.COMPUTABLE_OPERATOR.toString(), asg2,
                 new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
         asg2.addTransition(StateMachine.Event.SEMICOLON.toString(), start,
                 new theAction<>(StateMachine.Action.CALCULATE_EXPRESSION_AND_SET_VALUE_TO_IDENTIFIER));
 
-        advAsg1.addTransition(StateMachine.Event.VALUE.toString(), asg2,
+        advAsg1.addTransition(StateMachine.Event.VALUE.toString(), advAsg2,
+                new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
+        advAsg1.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), advAsg2,
                 new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
 
-        advAsg2.addTransition(StateMachine.Event.VALUE.toString(), asg2,
+        advAsg2.addTransition(StateMachine.Event.VALUE.toString(), advAsg2,
                 new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
-        advAsg2.addTransition(StateMachine.Event.COMPUTABLE_OPERATOR.toString(), asg2,
+        advAsg2.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), advAsg2,
+                new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
+        advAsg2.addTransition(StateMachine.Event.CLOSE_PARENTHESIS.toString(), advAsg2,
+                new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
+        advAsg2.addTransition(StateMachine.Event.COMPUTABLE_OPERATOR.toString(), advAsg2,
                 new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
         advAsg2.addTransition(StateMachine.Event.SEMICOLON.toString(), start,
                 new theAction<>(StateMachine.Action.ADD_CLOSE_PARENTHESIS_AND_CALCULATE_EXPRESSION_AND_SET_VALUE_TO_IDENTIFIER));
 
+        cond.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), cond1, (stateful, event, args) ->
+                stateful.parenthesisNumber++);
+        cond1.addTransition(StateMachine.Event.VALUE.toString(), cond1, (stateful, event, args) -> stateful.expression.add((Token)args[0]));
+        cond1.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), cond1, (stateful, event, args) -> {
+            stateful.parenthesisNumber++;
+            stateful.expression.add((Token)args[0]);
+        });
+        cond1.addTransition(StateMachine.Event.CLOSE_PARENTHESIS.toString(), (stateful, event, args) -> {
+                    stateful.parenthesisNumber--;
+                    if(stateful.parenthesisNumber == 0){
+                        return new StateActionPairImpl<>(cond2, null);
+                    } else {
+                        stateful.expression.add((Token)args[0]);
+                        return new StateActionPairImpl<>(cond1, null);
+                    }
+                });
+
+        cond2.addTransition(StateMachine.Event.OPEN_BRACE.toString(), cond3, (stateful, event, args) -> {
+            int resultPlace = opCodeGenerator.calculateExpression(stateful.expression);
+            opCodeGenerator.loadMem(resultPlace, "00");
+            stateful.braceNumber++;
+        });
+
+        addNestedTransitions(cond3, cond3);
+
+        cond3.addTransition(StateMachine.Event.OPEN_BRACE.toString(), cond3, (stateful, event, args) -> {
+            stateful.braceNumber++;
+            stateful.nestedTokens.add((Token)args[0]);
+        });
+        cond3.addTransition(StateMachine.Event.CLOSE_BRACE.toString(), (stateful, event, args) -> {
+            stateful.braceNumber--;
+            if(stateful.braceNumber == 0){
+                return new StateActionPairImpl<>(cond4, null);
+            } else {
+                stateful.nestedTokens.add((Token)args[0]);
+                return new StateActionPairImpl<>(cond3, null);
+            }
+        });
+
+        addEveryTransitionsExceptBracesAndSemicolon(cond2, extraCond);
+        cond2.addTransition(StateMachine.Event.SEMICOLON.toString(), cond4); // if is empty
+
+        addEveryTransitionsExceptBracesAndSemicolon(extraCond, extraCond);
+        extraCond.addTransition(StateMachine.Event.SEMICOLON.toString(), cond4);
+
+        cond4.addTransition(StateMachine.Event.ELSE.toString(), cond5, (stateful, event, args) -> {
+            opCodeGenerator.loadNum(0, "01");
+            outputOpcodes.add(OPCode.getOpcode(OPCode.OPCODE_8_DS.CMP, "00", "01"));
+            ArrayList<String> nestedRes = new ArrayList<>();
+            (new CodeGenerator(stateful.nestedTokens, nestedRes, fsm.getName() + "_nesting")).generate();
+            stateful.nestedTokens.clear();
+            outputOpcodes.add(OPCode.getOpcode(OPCode.OPCODE_16_I.BRZ, OPCodeGenerator.toBin(nestedRes.size() + 2/*jump ins(for <each>), after instructions*/, 8)));
+            outputOpcodes.addAll(nestedRes);
+        });
+
+        addStartStateTransitions(cond4, (stateful, event, args) ->
+                {
+                    opCodeGenerator.loadNum(0, "01");
+                    outputOpcodes.add(OPCode.getOpcode(OPCode.OPCODE_8_DS.CMP, "00", "01"));
+                    ArrayList<String> nestedRes = new ArrayList<>();
+                    (new CodeGenerator(stateful.nestedTokens, nestedRes, fsm.getName() + "_nesting")).generate();
+                    stateful.nestedTokens.clear();
+                    outputOpcodes.add(OPCode.getOpcode(OPCode.OPCODE_16_I.BRZ, OPCodeGenerator.toBin(nestedRes.size() + 1/*after instructions*/, 8)));
+                    outputOpcodes.addAll(nestedRes);
+                },
+                (stateful, event, args) -> {
+                    opCodeGenerator.loadNum(0, "01");
+                    outputOpcodes.add(OPCode.getOpcode(OPCode.OPCODE_8_DS.CMP, "00", "01"));
+                    ArrayList<String> nestedRes = new ArrayList<>();
+                    (new CodeGenerator(stateful.nestedTokens, nestedRes, fsm.getName() + "_nesting")).generate();
+                    stateful.nestedTokens.clear();
+                    outputOpcodes.add(OPCode.getOpcode(OPCode.OPCODE_16_I.BRZ, OPCodeGenerator.toBin(nestedRes.size() + 1/*after instructions*/, 8)));
+                    outputOpcodes.addAll(nestedRes);
+                    // ----
+                    stateful.variables.add((IdentifierToken) args[0]);
+                }
+        );
+
+        cond5.addTransition(StateMachine.Event.OPEN_BRACE.toString(), elseCond, (stateful, event, args) -> stateful.braceNumber++);
+
+        addNestedTransitions(elseCond, elseCond);
+        elseCond.addTransition(StateMachine.Event.OPEN_BRACE.toString(), elseCond, (stateful, event, args) -> {
+            stateful.braceNumber++;
+            stateful.nestedTokens.add((Token)args[0]);
+        });
+        elseCond.addTransition(StateMachine.Event.CLOSE_BRACE.toString(), (stateful, event, args) -> {
+            stateful.braceNumber--;
+            if(stateful.braceNumber == 0){
+                ArrayList<String> nestedRes = new ArrayList<>();
+                (new CodeGenerator(stateful.nestedTokens, nestedRes, fsm.getName() + "_nesting")).generate();
+                stateful.nestedTokens.clear();
+                outputOpcodes.add(OPCode.getOpcode(OPCode.OPCODE_16_I.BRZ, OPCodeGenerator.toBin(nestedRes.size() + 1/*after instructions*/, 8)));
+                outputOpcodes.addAll(nestedRes);
+                return new StateActionPairImpl<>(start, null);
+            } else {
+                stateful.nestedTokens.add((Token)args[0]);
+                return new StateActionPairImpl<>(elseCond, null);
+            }
+        });
+
+        addEveryTransitionsExceptBracesAndSemicolon(cond5, elseExtraCond);
+        cond5.addTransition(StateMachine.Event.SEMICOLON.toString(), start, (stateful, event, args) ->
+            stateful.nestedTokens.clear()
+        ); // else is empty
+
+        addEveryTransitionsExceptBracesAndSemicolon(elseExtraCond, elseExtraCond);
+        elseExtraCond.addTransition(StateMachine.Event.SEMICOLON.toString(), start, (stateful, event, args) -> {
+            ArrayList<String> nestedRes = new ArrayList<>();
+            (new CodeGenerator(stateful.nestedTokens, nestedRes, fsm.getName() + "_nesting")).generate();
+            stateful.nestedTokens.clear();
+            outputOpcodes.add(OPCode.getOpcode(OPCode.OPCODE_16_I.BRZ, OPCodeGenerator.toBin(nestedRes.size() + 1/*after instructions*/, 8)));
+            outputOpcodes.addAll(nestedRes);
+        });
 
 
 
@@ -116,8 +247,40 @@ public class CodeGenerator {
         states.add(asg2);
         states.add(advAsg1);
         states.add(advAsg2);
+        states.add(cond);
+        states.add(cond1);
+        states.add(cond2);
+        states.add(cond3);
+        states.add(cond4);
+        states.add(cond5);
+        states.add(elseCond);
+        states.add(extraCond);
+        states.add(elseExtraCond);
+
         persister = new MemoryPersisterImpl<>(states, start);
-        fsm = new FSM("code generator", persister);
+        fsm = new FSM(fsmName, persister);
+
+    }
+
+
+
+    private void addStartStateTransitions(State<StateMachine> state, Action<StateMachine> defaultAction,
+                                          Action<StateMachine> defaultPlusIdentifyingVarAction){
+        state.addTransition(StateMachine.Event.KEYWORD_VAR.toString(), def, defaultAction);
+        state.addTransition(StateMachine.Event.IDENTIFIER.toString(), asg, defaultPlusIdentifyingVarAction);
+        state.addTransition(StateMachine.Event.IF.toString(), cond, defaultAction);
+    }
+
+    private void addNestedTransitions(State<StateMachine> state, State<StateMachine> targetState){ // Any token except Braces
+        addEveryTransitionsExceptBracesAndSemicolon(state, targetState);
+        state.addTransition(StateMachine.Event.SEMICOLON.toString(), targetState);
+    }
+
+    private void addEveryTransitionsExceptBracesAndSemicolon(State<StateMachine> state, State<StateMachine> targetState){
+        // TODO : har eventi be joz brace mitune bashe
+        state.addTransition(StateMachine.Event.KEYWORD_VAR.toString(), targetState, (stateful, event, args) ->
+                stateful.nestedTokens.add((Token)args[0])
+        );
     }
 
     private static class theAction<T> implements Action<T> {
@@ -131,6 +294,7 @@ public class CodeGenerator {
         @Override
         public void execute(T stateful, String event, Object... args) throws RetryException {
             Token token = (Token) args[0];
+            OPCodeGenerator opCodeGenerator = (OPCodeGenerator) args[1];
             StateMachine inProcessFSM = (StateMachine) stateful;
             switch (action){
                 case ADD_IDENTIFIER_TO_VAR_STACK:
@@ -145,19 +309,19 @@ public class CodeGenerator {
                     inProcessFSM.expression.add(token);
                     break;
                 case CALCULATE_EXPRESSION_AND_DECLARE_AND_INITIALIZE_IDENTIFIERS:
-                    int resultPlace = OPCodeGenerator.calculateExpression(inProcessFSM.expression);
-                    OPCodeGenerator.loadMem(resultPlace, "00");
+                    int resultPlace = opCodeGenerator.calculateExpression(inProcessFSM.expression);
+                    opCodeGenerator.loadMem(resultPlace, "00");
                     while(!inProcessFSM.variables.isEmpty()){
                         String memSelName = inProcessFSM.variables.pop().value;
                         Memory.getRAM().aloc(memSelName);
-                        OPCodeGenerator.storeMem(memSelName, "00");
+                        opCodeGenerator.storeMem(memSelName, "00");
                     }
                     break;
                 case CALCULATE_EXPRESSION_AND_SET_VALUE_TO_IDENTIFIER:
-                    int resultPlace2 = OPCodeGenerator.calculateExpression(inProcessFSM.expression);
-                    OPCodeGenerator.loadMem(resultPlace2, "00");
+                    int resultPlace2 = opCodeGenerator.calculateExpression(inProcessFSM.expression);
+                    opCodeGenerator.loadMem(resultPlace2, "00");
                     String memSelName = inProcessFSM.variables.pop().value;
-                    OPCodeGenerator.storeMem(memSelName, "00");
+                    opCodeGenerator.storeMem(memSelName, "00");
                     break;
                 case ADD_IDENTIFIER_TO_EXP_STACK:
                     inProcessFSM.expression.add(inProcessFSM.variables.peek());
@@ -166,10 +330,10 @@ public class CodeGenerator {
                     break;
                 case ADD_CLOSE_PARENTHESIS_AND_CALCULATE_EXPRESSION_AND_SET_VALUE_TO_IDENTIFIER:
                     inProcessFSM.expression.add(new PunctuationToken(")"));
-                    int resultPlace3 = OPCodeGenerator.calculateExpression(inProcessFSM.expression);
-                    OPCodeGenerator.loadMem(resultPlace3, "00");
+                    int resultPlace3 = opCodeGenerator.calculateExpression(inProcessFSM.expression);
+                    opCodeGenerator.loadMem(resultPlace3, "00");
                     String memSelName2 = inProcessFSM.variables.pop().value;
-                    OPCodeGenerator.storeMem(memSelName2, "00");
+                    opCodeGenerator.storeMem(memSelName2, "00");
                     break;
             }
         }
@@ -183,14 +347,13 @@ public class CodeGenerator {
 
     public void generate(){
         StateMachine theStateMachine = new StateMachine();
-        for(Token token : ClassifiedData.getInstance().tokens){
+        for(Token token : inputTokens){
             try {
-                fsm.onEvent(theStateMachine, token.getEvent().toString(), token);
+                fsm.onEvent(theStateMachine, token.getEvent().toString(), token, opCodeGenerator);
             } catch (TooBusyException e) {
                 e.printStackTrace();
             }
         }
-        ClassifiedData.getInstance().onEndOfTokens();
     }
 
 }

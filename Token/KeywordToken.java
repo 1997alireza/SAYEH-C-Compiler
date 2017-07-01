@@ -17,7 +17,14 @@ public class KeywordToken extends Token {
             return StateMachine.Event.VALUE;
         }
 
-        //TODO: add remaining cases, such as if, else, while
+        if(value.equals("if")){
+            return StateMachine.Event.IF;
+        }
+
+        if(value.equals("else")){
+            return StateMachine.Event.ELSE;
+        }
+        //TODO: add remaining cases, such as else, while
 
         return StateMachine.Event.UNKNOWN;
     }

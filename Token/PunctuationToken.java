@@ -17,7 +17,23 @@ public class PunctuationToken extends Token{
             return StateMachine.Event.COMMA;
         }
 
-        //TODO: add remaining cases, such as bracket, ...
+        if(value.equals("(")){
+            return StateMachine.Event.OPEN_PARENTHESIS;
+        }
+
+        if(value.equals(")")){
+            return StateMachine.Event.CLOSE_PARENTHESIS;
+        }
+
+        if(value.equals("{")){
+            return StateMachine.Event.OPEN_BRACE;
+        }
+
+        if(value.equals("}")){
+            return StateMachine.Event.CLOSE_BRACE;
+        }
+
+        //TODO: add remaining cases, ...
 
         return StateMachine.Event.UNKNOWN;
     }

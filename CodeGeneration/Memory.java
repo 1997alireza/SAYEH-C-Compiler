@@ -105,7 +105,7 @@ public class Memory {
             }
         }
         try {
-            throw new Exception("Can't find this memory name");
+            throw new Exception("Can't find this memory name : " + name);
         } catch (Exception e) {
             e.printStackTrace();
         }
