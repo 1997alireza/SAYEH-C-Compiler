@@ -1,6 +1,7 @@
 package src.CodeGeneration.FSM;
 
 import org.statefulj.persistence.annotations.State;
+import src.CodeGeneration.OPCode;
 import src.Token.IdentifierToken;
 import src.Token.Token;
 
@@ -14,6 +15,7 @@ public class StateMachine {
     public ArrayList<Token> expression = new ArrayList<>();
     public Stack<IdentifierToken> variables = new Stack<>();
     public ArrayList<Token> nestedTokens = new ArrayList<>();
+    public ArrayList<String> whileExpressionOpcodes = new ArrayList<>();
 
     public int parenthesisNumber = 0, braceNumber = 0;
 
@@ -36,6 +38,7 @@ public class StateMachine {
         CLOSE_PARENTHESIS(")"),
         IF("if"),
         ELSE("else"),
+        WHILE("while"),
         OPEN_BRACE("{"),
         CLOSE_BRACE("}");
 
@@ -47,7 +50,6 @@ public class StateMachine {
             return this.str;
         }
 
-        //TODO: add remaining events, such as if, while, bracket, ...
     }
 
     public enum Action {

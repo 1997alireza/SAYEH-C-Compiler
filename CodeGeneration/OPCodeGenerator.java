@@ -28,10 +28,10 @@ class OPCodeGenerator {
         opcodes.add(OPCode.getOpcode(OPCode.OPCODE_8_DS.LDA, regAdr, regAdr));
     }
 
-    void storeMem(String name, String regAdr){ // reg -> mem
+    void storeMem(String name, String regAdr, String tempRegAdr){ // reg -> mem
         int memSelPlace = Memory.getRAM().find(name);
-        loadNum(memSelPlace, regAdr);
-        opcodes.add(OPCode.getOpcode(OPCode.OPCODE_8_DS.STA, regAdr, regAdr));
+        loadNum(memSelPlace, tempRegAdr);
+        opcodes.add(OPCode.getOpcode(OPCode.OPCODE_8_DS.STA, tempRegAdr, regAdr));
     }
 
     void loadOperand(Token token, String regAdr){ // ... -> reg
@@ -93,13 +93,18 @@ class OPCodeGenerator {
             }
         }
 
+        while (!operators.empty()){
+            OperatorToken op = (OperatorToken)operators.pop();
+            calculateOperator(op, operands, lastTokenIsIden);
+        }
+
         expression.clear();
 
         Token result = operands.pop();
         if(result instanceof NumberToken){
             String tempMem = Memory.getRAM().aloc();
             loadNum(((NumberToken)result).intValue, "00");
-            storeMem(tempMem, "00");
+            storeMem(tempMem, "00", "01");
             return Memory.getRAM().find(tempMem);
         }
 
@@ -120,18 +125,18 @@ class OPCodeGenerator {
                     loadNum(1, "01");
                     opcodes.add(OPCode.getOpcode(OPCode.OPCODE_8_DS.ADD,
                             "00", "01"));
-                    storeMem(opToken00.value, "00");
+                    storeMem(opToken00.value, "00", "01");
 
                     operands.add(opToken00);
                 } else { // i(00)++
                     String tempMem = Memory.getRAM().aloc();
-                    storeMem(tempMem, "00");
+                    storeMem(tempMem, "00", "01");
                     operands.add(new IdentifierToken(tempMem, -1, -1));
 
                     loadNum(1, "01");
                     opcodes.add(OPCode.getOpcode(OPCode.OPCODE_8_DS.ADD,
                             "00", "01"));
-                    storeMem(opToken00.value, "00");
+                    storeMem(opToken00.value, "00", "01");
                 }
 
                 return;
@@ -140,18 +145,18 @@ class OPCodeGenerator {
                     loadNum(-1, "01");
                     opcodes.add(OPCode.getOpcode(OPCode.OPCODE_8_DS.ADD,
                             "00", "01"));
-                    storeMem(opToken00.value, "00");
+                    storeMem(opToken00.value, "00", "01");
 
                     operands.add(opToken00);
                 } else { // i(00)--
                     String tempMem = Memory.getRAM().aloc();
-                    storeMem(tempMem, "00");
+                    storeMem(tempMem, "00", "01");
                     operands.add(new IdentifierToken(tempMem, -1, -1));
 
                     loadNum(-1, "01");
                     opcodes.add(OPCode.getOpcode(OPCode.OPCODE_8_DS.ADD,
                             "00", "01"));
-                    storeMem(opToken00.value, "00");
+                    storeMem(opToken00.value, "00", "01");
                 }
 
                 return;
@@ -235,7 +240,7 @@ class OPCodeGenerator {
         }
 
         String tempMem = Memory.getRAM().aloc();
-        storeMem(tempMem, "00");
+        storeMem(tempMem, "00", "01");
         operands.add(new IdentifierToken(tempMem, -1, -1));
 
     }

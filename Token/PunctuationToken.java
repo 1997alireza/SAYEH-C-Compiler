@@ -33,8 +33,6 @@ public class PunctuationToken extends Token{
             return StateMachine.Event.CLOSE_BRACE;
         }
 
-        //TODO: add remaining cases, ...
-
         return StateMachine.Event.UNKNOWN;
     }
 }

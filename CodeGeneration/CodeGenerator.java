@@ -17,6 +17,7 @@ import src.Token.Token;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.StringJoiner;
 
 public class CodeGenerator {
 
@@ -26,19 +27,19 @@ public class CodeGenerator {
     private State<StateMachine> start,
                     def, def1, def2, def3,
                     asg, asg1, asg2, advAsg1, advAsg2,
-                    cond, cond1, cond2, cond3, extraCond,  cond4, cond5, elseCond, elseExtraCond;
+                    cond, cond1, cond2, cond3, extraCond,  cond4, cond5, elseCond, elseExtraCond,
+                    while0, while1, while2, while3, extraWhile;
 
     private FSM fsm;
 
     private OPCodeGenerator opCodeGenerator;
     ArrayList<Token> inputTokens;
-    public CodeGenerator(ArrayList<Token> inputTokens, ArrayList<String> outputOpcodes, String fsmName){
+    public CodeGenerator(ArrayList<Token> inputTokens, ArrayList<String> outputOpcodes, String nameSpace){
         this.inputTokens = inputTokens;
         opCodeGenerator = new OPCodeGenerator(outputOpcodes);
 
         states = new LinkedList<>();
         start = new StateImpl<>("start");
-        // TODO : define and valuation identifiers
         def = new StateImpl<>("def");
         def1 = new StateImpl<>("def 1");
         def2 = new StateImpl<>("def 2");
@@ -57,8 +58,20 @@ public class CodeGenerator {
         elseCond = new StateImpl<>("else cond");
         extraCond = new StateImpl<>("extra cond");
         elseExtraCond = new StateImpl<>("else extra cond");
+        while0 = new StateImpl<>("while 0");
+        while1 = new StateImpl<>("while 1");
+        while2 = new StateImpl<>("while 2");
+        while3 = new StateImpl<>("while 3");
+        extraWhile = new StateImpl<>("extra while");
 
-        addStartStateTransitions(start, null,
+        addStartStateTransitions(start, (stateful, event, args) -> {
+                    stateful.expression.clear();
+                    stateful.variables.clear();
+                    stateful.nestedTokens.clear();
+                    stateful.whileExpressionOpcodes.clear();
+                    stateful.braceNumber = 0;
+                    stateful.parenthesisNumber = 0;
+                },
                 new theAction<>(StateMachine.Action.ADD_IDENTIFIER_TO_VAR_STACK));
 
         def.addTransition(StateMachine.Event.IDENTIFIER.toString(), def1,
@@ -160,7 +173,7 @@ public class CodeGenerator {
             }
         });
 
-        addEveryTransitionsExceptBracesAndSemicolon(cond2, extraCond);
+        addEveryTransitionsExceptBracesAndSemicolonAndCalcExp(cond2, extraCond);
         cond2.addTransition(StateMachine.Event.SEMICOLON.toString(), cond4); // if is empty
 
         addEveryTransitionsExceptBracesAndSemicolon(extraCond, extraCond);
@@ -235,7 +248,64 @@ public class CodeGenerator {
             outputOpcodes.addAll(nestedRes);
         });
 
+        while0.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), while1, (stateful, event, args) -> {
+                stateful.parenthesisNumber++;
+                stateful.whileExpressionOpcodes.clear();
+        });
 
+        while1.addTransition(StateMachine.Event.VALUE.toString(), while1, (stateful, event, args) ->
+                                stateful.expression.add((Token)args[0]));
+        while1.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), while1, (stateful, event, args) -> {
+            stateful.parenthesisNumber++;
+            stateful.expression.add((Token)args[0]);
+        });
+        while1.addTransition(StateMachine.Event.CLOSE_PARENTHESIS.toString(), (stateful, event, args) -> {
+            stateful.parenthesisNumber--;
+            if(stateful.parenthesisNumber == 0){
+                return new StateActionPairImpl<>(while2, null);
+
+            } else {
+                stateful.expression.add((Token)args[0]);
+                return new StateActionPairImpl<>(while1, null);
+            }
+        });
+
+        while2.addTransition(StateMachine.Event.SEMICOLON.toString(), start/*,
+                (stateful, event, args) -> stateful.whileExpression.clear()*/);
+        while2.addTransition(StateMachine.Event.OPEN_BRACE.toString(), while3, (stateful, event, args) -> {
+            OPCodeGenerator expressionOpcodeGenerator = new OPCodeGenerator(stateful.whileExpressionOpcodes);
+            int resultPlace = expressionOpcodeGenerator.calculateExpression(stateful.expression);
+            expressionOpcodeGenerator.loadMem(resultPlace, "00");
+            stateful.braceNumber++;
+        });
+
+        addNestedTransitions(while3, while3);
+
+        while3.addTransition(StateMachine.Event.OPEN_BRACE.toString(), while3, (stateful, event, args) -> {
+            stateful.braceNumber++;
+            stateful.nestedTokens.add((Token)args[0]);
+        });
+        while3.addTransition(StateMachine.Event.CLOSE_BRACE.toString(), (stateful, event, args) -> {
+            stateful.braceNumber--;
+            if(stateful.braceNumber == 0){
+                ArrayList<String> nestedRes = new ArrayList<>();
+                (new CodeGenerator(stateful.nestedTokens, nestedRes, fsm.getName() + "_nesting")).generate();
+                stateful.nestedTokens.clear();
+
+                outputOpcodes.addAll(stateful.whileExpressionOpcodes);
+                opCodeGenerator.loadNum(0, "01");
+                outputOpcodes.add(OPCode.getOpcode(OPCode.OPCODE_8_DS.CMP, "00", "01"));
+                outputOpcodes.add(OPCode.getOpcode(OPCode.OPCODE_16_I.BRZ, OPCodeGenerator.toBin(nestedRes.size() + 2/*jump ins, nested inss*/, 8)));
+                outputOpcodes.addAll(nestedRes);
+                outputOpcodes.add(OPCode.getOpcode(OPCode.OPCODE_16_I.JPR,
+                        OPCodeGenerator.toBin(-(nestedRes.size() + 4 + stateful.whileExpressionOpcodes.size()), 8)));
+
+                return new StateActionPairImpl<>(start, null);
+            } else {
+                stateful.nestedTokens.add((Token)args[0]);
+                return new StateActionPairImpl<>(while3, null);
+            }
+        });
 
         states.add(start);
         states.add(def);
@@ -256,10 +326,15 @@ public class CodeGenerator {
         states.add(elseCond);
         states.add(extraCond);
         states.add(elseExtraCond);
+        states.add(while0);
+        states.add(while1);
+        states.add(while2);
+        states.add(while3);
+        states.add(extraWhile);
 
         persister = new MemoryPersisterImpl<>(states, start);
-        fsm = new FSM(fsmName, persister);
-
+        fsm = new FSM(nameSpace, persister);
+        System.out.printf("");
     }
 
 
@@ -269,18 +344,116 @@ public class CodeGenerator {
         state.addTransition(StateMachine.Event.KEYWORD_VAR.toString(), def, defaultAction);
         state.addTransition(StateMachine.Event.IDENTIFIER.toString(), asg, defaultPlusIdentifyingVarAction);
         state.addTransition(StateMachine.Event.IF.toString(), cond, defaultAction);
+        state.addTransition(StateMachine.Event.WHILE.toString(), while0, defaultAction);
+        state.addTransition(StateMachine.Event.SEMICOLON.toString(), state);
     }
 
     private void addNestedTransitions(State<StateMachine> state, State<StateMachine> targetState){ // Any token except Braces
         addEveryTransitionsExceptBracesAndSemicolon(state, targetState);
-        state.addTransition(StateMachine.Event.SEMICOLON.toString(), targetState);
+        state.addTransition(StateMachine.Event.SEMICOLON.toString(), targetState, (stateful, event, args) ->
+                stateful.nestedTokens.add((Token)args[0]));
     }
 
     private void addEveryTransitionsExceptBracesAndSemicolon(State<StateMachine> state, State<StateMachine> targetState){
-        // TODO : har eventi be joz brace mitune bashe
         state.addTransition(StateMachine.Event.KEYWORD_VAR.toString(), targetState, (stateful, event, args) ->
                 stateful.nestedTokens.add((Token)args[0])
         );
+        state.addTransition(StateMachine.Event.ASSIGN_OPERATOR.toString(), targetState, (stateful, event, args) ->
+                stateful.nestedTokens.add((Token)args[0])
+        );
+        state.addTransition(StateMachine.Event.ADVANCED_ASSIGN_OPERATOR.toString(), targetState, (stateful, event, args) ->
+                stateful.nestedTokens.add((Token)args[0])
+        );
+        state.addTransition(StateMachine.Event.COMPUTABLE_OPERATOR.toString(), targetState, (stateful, event, args) ->
+                stateful.nestedTokens.add((Token)args[0])
+        );
+        state.addTransition(StateMachine.Event.IDENTIFIER.toString(), targetState, (stateful, event, args) ->
+                stateful.nestedTokens.add((Token)args[0])
+        );
+        state.addTransition(StateMachine.Event.VALUE.toString(), targetState, (stateful, event, args) ->
+                stateful.nestedTokens.add((Token)args[0])
+        );
+        state.addTransition(StateMachine.Event.COMMA.toString(), targetState, (stateful, event, args) ->
+                stateful.nestedTokens.add((Token)args[0])
+        );
+        state.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), targetState, (stateful, event, args) ->
+                stateful.nestedTokens.add((Token)args[0])
+        );
+        state.addTransition(StateMachine.Event.CLOSE_PARENTHESIS.toString(), targetState, (stateful, event, args) ->
+                stateful.nestedTokens.add((Token)args[0])
+        );
+        state.addTransition(StateMachine.Event.IF.toString(), targetState, (stateful, event, args) ->
+                stateful.nestedTokens.add((Token)args[0])
+        );
+        state.addTransition(StateMachine.Event.ELSE.toString(), targetState, (stateful, event, args) ->
+                stateful.nestedTokens.add((Token)args[0])
+        );
+        state.addTransition(StateMachine.Event.WHILE.toString(), targetState, (stateful, event, args) ->
+                stateful.nestedTokens.add((Token)args[0])
+        );
+    }
+
+    private void addEveryTransitionsExceptBracesAndSemicolonAndCalcExp(State<StateMachine> state, State<StateMachine> targetState) {
+        state.addTransition(StateMachine.Event.KEYWORD_VAR.toString(), targetState, (stateful, event, args) -> {
+            stateful.nestedTokens.add((Token) args[0]);
+            int resultPlace = opCodeGenerator.calculateExpression(stateful.expression);
+            opCodeGenerator.loadMem(resultPlace, "00");
+        });
+        state.addTransition(StateMachine.Event.ASSIGN_OPERATOR.toString(), targetState, (stateful, event, args) -> {
+            stateful.nestedTokens.add((Token) args[0]);
+            int resultPlace = opCodeGenerator.calculateExpression(stateful.expression);
+            opCodeGenerator.loadMem(resultPlace, "00");
+        });
+        state.addTransition(StateMachine.Event.ADVANCED_ASSIGN_OPERATOR.toString(), targetState, (stateful, event, args) -> {
+            stateful.nestedTokens.add((Token) args[0]);
+            int resultPlace = opCodeGenerator.calculateExpression(stateful.expression);
+            opCodeGenerator.loadMem(resultPlace, "00");
+        });
+        state.addTransition(StateMachine.Event.COMPUTABLE_OPERATOR.toString(), targetState, (stateful, event, args) -> {
+            stateful.nestedTokens.add((Token) args[0]);
+            int resultPlace = opCodeGenerator.calculateExpression(stateful.expression);
+            opCodeGenerator.loadMem(resultPlace, "00");
+        });
+        state.addTransition(StateMachine.Event.IDENTIFIER.toString(), targetState, (stateful, event, args) -> {
+            stateful.nestedTokens.add((Token) args[0]);
+            int resultPlace = opCodeGenerator.calculateExpression(stateful.expression);
+            opCodeGenerator.loadMem(resultPlace, "00");
+        });
+        state.addTransition(StateMachine.Event.VALUE.toString(), targetState, (stateful, event, args) -> {
+            stateful.nestedTokens.add((Token) args[0]);
+            int resultPlace = opCodeGenerator.calculateExpression(stateful.expression);
+            opCodeGenerator.loadMem(resultPlace, "00");
+        });
+        state.addTransition(StateMachine.Event.COMMA.toString(), targetState, (stateful, event, args) -> {
+            stateful.nestedTokens.add((Token) args[0]);
+            int resultPlace = opCodeGenerator.calculateExpression(stateful.expression);
+            opCodeGenerator.loadMem(resultPlace, "00");
+        });
+        state.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), targetState, (stateful, event, args) -> {
+            stateful.nestedTokens.add((Token) args[0]);
+            int resultPlace = opCodeGenerator.calculateExpression(stateful.expression);
+            opCodeGenerator.loadMem(resultPlace, "00");
+        });
+        state.addTransition(StateMachine.Event.CLOSE_PARENTHESIS.toString(), targetState, (stateful, event, args) -> {
+            stateful.nestedTokens.add((Token) args[0]);
+            int resultPlace = opCodeGenerator.calculateExpression(stateful.expression);
+            opCodeGenerator.loadMem(resultPlace, "00");
+        });
+        state.addTransition(StateMachine.Event.IF.toString(), targetState, (stateful, event, args) -> {
+            stateful.nestedTokens.add((Token) args[0]);
+            int resultPlace = opCodeGenerator.calculateExpression(stateful.expression);
+            opCodeGenerator.loadMem(resultPlace, "00");
+        });
+        state.addTransition(StateMachine.Event.ELSE.toString(), targetState, (stateful, event, args) -> {
+            stateful.nestedTokens.add((Token) args[0]);
+            int resultPlace = opCodeGenerator.calculateExpression(stateful.expression);
+            opCodeGenerator.loadMem(resultPlace, "00");
+        });
+        state.addTransition(StateMachine.Event.WHILE.toString(), targetState, (stateful, event, args) -> {
+            stateful.nestedTokens.add((Token) args[0]);
+            int resultPlace = opCodeGenerator.calculateExpression(stateful.expression);
+            opCodeGenerator.loadMem(resultPlace, "00");
+        });
     }
 
     private static class theAction<T> implements Action<T> {
@@ -314,14 +487,14 @@ public class CodeGenerator {
                     while(!inProcessFSM.variables.isEmpty()){
                         String memSelName = inProcessFSM.variables.pop().value;
                         Memory.getRAM().aloc(memSelName);
-                        opCodeGenerator.storeMem(memSelName, "00");
+                        opCodeGenerator.storeMem(memSelName, "00", "01");
                     }
                     break;
                 case CALCULATE_EXPRESSION_AND_SET_VALUE_TO_IDENTIFIER:
                     int resultPlace2 = opCodeGenerator.calculateExpression(inProcessFSM.expression);
                     opCodeGenerator.loadMem(resultPlace2, "00");
                     String memSelName = inProcessFSM.variables.pop().value;
-                    opCodeGenerator.storeMem(memSelName, "00");
+                    opCodeGenerator.storeMem(memSelName, "00", "01");
                     break;
                 case ADD_IDENTIFIER_TO_EXP_STACK:
                     inProcessFSM.expression.add(inProcessFSM.variables.peek());
@@ -333,7 +506,7 @@ public class CodeGenerator {
                     int resultPlace3 = opCodeGenerator.calculateExpression(inProcessFSM.expression);
                     opCodeGenerator.loadMem(resultPlace3, "00");
                     String memSelName2 = inProcessFSM.variables.pop().value;
-                    opCodeGenerator.storeMem(memSelName2, "00");
+                    opCodeGenerator.storeMem(memSelName2, "00", "01");
                     break;
             }
         }

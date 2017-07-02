@@ -24,7 +24,10 @@ public class KeywordToken extends Token {
         if(value.equals("else")){
             return StateMachine.Event.ELSE;
         }
-        //TODO: add remaining cases, such as else, while
+
+        if(value.equals("while")){
+            return StateMachine.Event.WHILE;
+        }
 
         return StateMachine.Event.UNKNOWN;
     }
