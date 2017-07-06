@@ -8,6 +8,7 @@ import org.statefulj.fsm.model.impl.StateActionPairImpl;
 import org.statefulj.fsm.model.impl.StateImpl;
 import org.statefulj.fsm.model.State;
 import org.statefulj.persistence.memory.MemoryPersisterImpl;
+import src.ClassifiedData;
 import src.CodeGeneration.FSM.StateMachine;
 import src.Token.IdentifierToken;
 import src.Token.OperatorToken;
@@ -17,7 +18,6 @@ import src.Token.Token;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.StringJoiner;
 
 public class CodeGenerator {
 
@@ -28,7 +28,7 @@ public class CodeGenerator {
                     def, def1, def2, def3,
                     asg, asg1, asg2, advAsg1, advAsg2,
                     cond, cond1, cond2, cond3, extraCond,  cond4, cond5, elseCond, elseExtraCond,
-                    while0, while1, while2, while3, extraWhile;
+                    while0, while1, while2, while3, extraWhile, error;
 
     private FSM fsm;
 
@@ -63,6 +63,7 @@ public class CodeGenerator {
         while2 = new StateImpl<>("while 2");
         while3 = new StateImpl<>("while 3");
         extraWhile = new StateImpl<>("extra while");
+        error = new StateImpl<>("error");
 
         addStartStateTransitions(start, (stateful, event, args) -> {
                     stateful.expression.clear();
@@ -73,19 +74,202 @@ public class CodeGenerator {
                     stateful.parenthesisNumber = 0;
                 },
                 new theAction<>(StateMachine.Action.ADD_IDENTIFIER_TO_VAR_STACK));
+        start.addTransition(StateMachine.Event.ELSE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be 'else' in here. Here can come 'int', 'char', 'boolean' , an identifier," +
+                    " 'if', 'while' or a semicolon.";
+        });
 
         def.addTransition(StateMachine.Event.IDENTIFIER.toString(), def1,
                 new theAction<>(StateMachine.Action.ADD_IDENTIFIER_TO_VAR_STACK));
+        def.addTransition(StateMachine.Event.UNKNOWN.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Unknown token : '" + ((Token)args[0]).value + "'";
+        });
+        def.addTransition(StateMachine.Event.KEYWORD_VAR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an identifier.";
+        });
+        def.addTransition(StateMachine.Event.ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an identifier.";
+        });
+        def.addTransition(StateMachine.Event.ADVANCED_ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an identifier.";
+        });
+        def.addTransition(StateMachine.Event.COMPUTABLE_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an identifier.";
+        });
+        def.addTransition(StateMachine.Event.VALUE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an identifier.";
+        });
+        def.addTransition(StateMachine.Event.COMMA.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an identifier.";
+        });
+        def.addTransition(StateMachine.Event.SEMICOLON.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an identifier.";
+        });
+        def.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an identifier.";
+        });
+        def.addTransition(StateMachine.Event.CLOSE_PARENTHESIS.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an identifier.";
+        });
+        def.addTransition(StateMachine.Event.IF.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an identifier.";
+        });
+        def.addTransition(StateMachine.Event.ELSE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an identifier.";
+        });
+        def.addTransition(StateMachine.Event.WHILE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an identifier.";
+        });
+        def.addTransition(StateMachine.Event.OPEN_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an identifier.";
+        });
+        def.addTransition(StateMachine.Event.CLOSE_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an identifier.";
+        });
+
 
         def1.addTransition(StateMachine.Event.COMMA.toString(), def);
         def1.addTransition(StateMachine.Event.SEMICOLON.toString(), start,
                 new theAction<>(StateMachine.Action.DECLARE_IDENTIFIERS));
         def1.addTransition(StateMachine.Event.ASSIGN_OPERATOR.toString(), def2);
+        def1.addTransition(StateMachine.Event.UNKNOWN.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Unknown token : '" + ((Token)args[0]).value + "'";
+        });
+        def1.addTransition(StateMachine.Event.KEYWORD_VAR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come '=' or ','.";
+        });
+        def1.addTransition(StateMachine.Event.ADVANCED_ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come '=' or ','.";
+        });
+        def1.addTransition(StateMachine.Event.COMPUTABLE_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come '=' or ','.";
+        });
+        def1.addTransition(StateMachine.Event.IDENTIFIER.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come '=' or ','.";
+        });
+        def1.addTransition(StateMachine.Event.VALUE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come '=' or ','.";
+        });
+        def1.addTransition(StateMachine.Event.SEMICOLON.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come '=' or ','.";
+        });
+        def1.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come '=' or ','.";
+        });
+        def1.addTransition(StateMachine.Event.CLOSE_PARENTHESIS.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come '=' or ','.";
+        });
+        def1.addTransition(StateMachine.Event.IF.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come '=' or ','.";
+        });
+        def1.addTransition(StateMachine.Event.ELSE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come '=' or ','.";
+        });
+        def1.addTransition(StateMachine.Event.WHILE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come '=' or ','.";
+        });
+        def1.addTransition(StateMachine.Event.OPEN_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come '=' or ','.";
+        });
+        def1.addTransition(StateMachine.Event.CLOSE_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come '=' or ','.";
+        });
+
 
         def2.addTransition(StateMachine.Event.VALUE.toString(), def3,
                 new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
         def2.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), def3,
                 new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
+        def2.addTransition(StateMachine.Event.IDENTIFIER.toString(), def3,
+                new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
+        def2.addTransition(StateMachine.Event.UNKNOWN.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Unknown token : '" + ((Token)args[0]).value + "'";
+        });
+        def2.addTransition(StateMachine.Event.KEYWORD_VAR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        def2.addTransition(StateMachine.Event.ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        def2.addTransition(StateMachine.Event.ADVANCED_ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        def2.addTransition(StateMachine.Event.COMPUTABLE_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        def2.addTransition(StateMachine.Event.COMMA.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        def2.addTransition(StateMachine.Event.SEMICOLON.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        def2.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        def2.addTransition(StateMachine.Event.CLOSE_PARENTHESIS.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        def2.addTransition(StateMachine.Event.IF.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        def2.addTransition(StateMachine.Event.ELSE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        def2.addTransition(StateMachine.Event.WHILE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        def2.addTransition(StateMachine.Event.OPEN_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        def2.addTransition(StateMachine.Event.CLOSE_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+
+
 
         def3.addTransition(StateMachine.Event.VALUE.toString(), def3,
                 new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
@@ -97,15 +281,174 @@ public class CodeGenerator {
                 new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
         def3.addTransition(StateMachine.Event.SEMICOLON.toString(), start,
                 new theAction<>(StateMachine.Action.CALCULATE_EXPRESSION_AND_DECLARE_AND_INITIALIZE_IDENTIFIERS));
+        def3.addTransition(StateMachine.Event.IDENTIFIER.toString(), def3,
+                new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
+        def3.addTransition(StateMachine.Event.UNKNOWN.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Unknown token : '" + ((Token)args[0]).value + "'";
+        });
+        def3.addTransition(StateMachine.Event.KEYWORD_VAR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or operator or a parenthesis or a semicolon.";
+        });
+        def3.addTransition(StateMachine.Event.ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or operator or identifier or a parenthesis or a semicolon.";
+        });
+        def3.addTransition(StateMachine.Event.ADVANCED_ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or operator or identifier or a parenthesis or a semicolon.";
+        });
+        def3.addTransition(StateMachine.Event.COMMA.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or operator or identifier or a parenthesis or a semicolon.";
+        });def3.addTransition(StateMachine.Event.SEMICOLON.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or operator or identifier or a parenthesis or a semicolon.";
+        });def3.addTransition(StateMachine.Event.IF.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or operator or identifier or a parenthesis or a semicolon.";
+        });
+        def3.addTransition(StateMachine.Event.ELSE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or operator or identifier or a parenthesis or a semicolon.";
+        });
+        def3.addTransition(StateMachine.Event.WHILE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or operator or identifier or a parenthesis or a semicolon.";
+        });
+        def3.addTransition(StateMachine.Event.OPEN_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or operator or identifier or a parenthesis or a semicolon.";
+        });
+        def3.addTransition(StateMachine.Event.CLOSE_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or operator or identifier or a parenthesis or a semicolon.";
+        });
+
+
+
 
         asg.addTransition(StateMachine.Event.ASSIGN_OPERATOR.toString(), asg1);
         asg.addTransition(StateMachine.Event.ADVANCED_ASSIGN_OPERATOR.toString(), advAsg1,
                 new theAction<>(StateMachine.Action.ADD_IDENTIFIER_TO_EXP_STACK));
 
+        asg.addTransition(StateMachine.Event.UNKNOWN.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Unknown token : '" + ((Token)args[0]).value + "'";
+        });
+        asg.addTransition(StateMachine.Event.KEYWORD_VAR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an assignment operator.";
+        });
+        asg.addTransition(StateMachine.Event.COMPUTABLE_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an assignment operator.";
+        });
+        asg.addTransition(StateMachine.Event.IDENTIFIER.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an assignment operator.";
+        });
+        asg.addTransition(StateMachine.Event.VALUE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an assignment operator.";
+        });
+        asg.addTransition(StateMachine.Event.COMMA.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an assignment operator.";
+        });
+        asg.addTransition(StateMachine.Event.SEMICOLON.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an assignment operator.";
+        });
+        asg.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an assignment operator.";
+        });
+        asg.addTransition(StateMachine.Event.CLOSE_PARENTHESIS.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an assignment operator.";
+        });
+        asg.addTransition(StateMachine.Event.IF.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an assignment operator.";
+        });
+        asg.addTransition(StateMachine.Event.ELSE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an assignment operator.";
+        });
+        asg.addTransition(StateMachine.Event.WHILE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an assignment operator.";
+        });
+        asg.addTransition(StateMachine.Event.OPEN_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an assignment operator.";
+        });
+        asg.addTransition(StateMachine.Event.CLOSE_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an assignment operator.";
+        });
+
+
+
+
         asg1.addTransition(StateMachine.Event.VALUE.toString(), asg2,
                 new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
         asg1.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), asg2,
                 new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
+        asg1.addTransition(StateMachine.Event.IDENTIFIER.toString(), asg2,
+                new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
+        asg1.addTransition(StateMachine.Event.UNKNOWN.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Unknown token : '" + ((Token)args[0]).value + "'";
+        });
+        asg1.addTransition(StateMachine.Event.KEYWORD_VAR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        asg1.addTransition(StateMachine.Event.ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        asg1.addTransition(StateMachine.Event.ADVANCED_ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        asg1.addTransition(StateMachine.Event.COMMA.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        asg1.addTransition(StateMachine.Event.SEMICOLON.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        asg1.addTransition(StateMachine.Event.COMPUTABLE_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        asg1.addTransition(StateMachine.Event.IF.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        asg1.addTransition(StateMachine.Event.ELSE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        asg1.addTransition(StateMachine.Event.WHILE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        asg1.addTransition(StateMachine.Event.OPEN_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        asg1.addTransition(StateMachine.Event.CLOSE_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+
+
 
         asg2.addTransition(StateMachine.Event.VALUE.toString(), asg2,
                 new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
@@ -117,11 +460,112 @@ public class CodeGenerator {
                 new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
         asg2.addTransition(StateMachine.Event.SEMICOLON.toString(), start,
                 new theAction<>(StateMachine.Action.CALCULATE_EXPRESSION_AND_SET_VALUE_TO_IDENTIFIER));
+        asg2.addTransition(StateMachine.Event.IDENTIFIER.toString(), asg2,
+                new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
+        asg2.addTransition(StateMachine.Event.UNKNOWN.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Unknown token : '" + ((Token)args[0]).value + "'";
+        });
+        asg2.addTransition(StateMachine.Event.KEYWORD_VAR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or parenthesis or an operator.";
+        });
+        asg2.addTransition(StateMachine.Event.ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or parenthesis or an operator.";
+        });
+        asg2.addTransition(StateMachine.Event.ADVANCED_ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or parenthesis or an operator.";
+        });
+        asg2.addTransition(StateMachine.Event.COMMA.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or parenthesis or an operator.";
+        });
+        asg2.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or parenthesis or an operator.";
+        });
+        asg2.addTransition(StateMachine.Event.CLOSE_PARENTHESIS.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or parenthesis or an operator.";
+        });
+        asg2.addTransition(StateMachine.Event.IF.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or parenthesis or an operator.";
+        });
+        asg2.addTransition(StateMachine.Event.ELSE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or parenthesis or an operator.";
+        });
+        asg2.addTransition(StateMachine.Event.WHILE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or parenthesis or an operator.";
+        });
+        asg2.addTransition(StateMachine.Event.OPEN_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or parenthesis or an operator.";
+        });
+        asg2.addTransition(StateMachine.Event.CLOSE_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or parenthesis or an operator.";
+        });
+
 
         advAsg1.addTransition(StateMachine.Event.VALUE.toString(), advAsg2,
                 new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
         advAsg1.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), advAsg2,
                 new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
+        advAsg1.addTransition(StateMachine.Event.IDENTIFIER.toString(), advAsg2,
+                new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
+        advAsg1.addTransition(StateMachine.Event.UNKNOWN.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Unknown token : '" + ((Token)args[0]).value + "'";
+        });
+        advAsg1.addTransition(StateMachine.Event.KEYWORD_VAR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        advAsg1.addTransition(StateMachine.Event.ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        advAsg1.addTransition(StateMachine.Event.ADVANCED_ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        advAsg1.addTransition(StateMachine.Event.COMMA.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        advAsg1.addTransition(StateMachine.Event.SEMICOLON.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        advAsg1.addTransition(StateMachine.Event.COMPUTABLE_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        advAsg1.addTransition(StateMachine.Event.IF.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        advAsg1.addTransition(StateMachine.Event.ELSE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        advAsg1.addTransition(StateMachine.Event.WHILE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        advAsg1.addTransition(StateMachine.Event.OPEN_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
+        advAsg1.addTransition(StateMachine.Event.CLOSE_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or open parenthesis.";
+        });
 
         advAsg2.addTransition(StateMachine.Event.VALUE.toString(), advAsg2,
                 new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
@@ -133,10 +577,124 @@ public class CodeGenerator {
                 new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
         advAsg2.addTransition(StateMachine.Event.SEMICOLON.toString(), start,
                 new theAction<>(StateMachine.Action.ADD_CLOSE_PARENTHESIS_AND_CALCULATE_EXPRESSION_AND_SET_VALUE_TO_IDENTIFIER));
+        advAsg2.addTransition(StateMachine.Event.IDENTIFIER.toString(), advAsg2,
+                new theAction<>(StateMachine.Action.ADD_EXPRESSION_TO_EXP_STACK));
+        advAsg2.addTransition(StateMachine.Event.UNKNOWN.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Unknown token : '" + ((Token)args[0]).value + "'";
+        });
+        advAsg2.addTransition(StateMachine.Event.KEYWORD_VAR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or parenthesis or an operator.";
+        });
+        advAsg2.addTransition(StateMachine.Event.ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or parenthesis or an operator.";
+        });
+        advAsg2.addTransition(StateMachine.Event.ADVANCED_ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or parenthesis or an operator.";
+        });
+        advAsg2.addTransition(StateMachine.Event.COMMA.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or parenthesis or an operator.";
+        });
+        advAsg2.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or parenthesis or an operator.";
+        });
+        advAsg2.addTransition(StateMachine.Event.CLOSE_PARENTHESIS.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or parenthesis or an operator.";
+        });
+        advAsg2.addTransition(StateMachine.Event.IF.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or parenthesis or an operator.";
+        });
+        advAsg2.addTransition(StateMachine.Event.ELSE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or parenthesis or an operator.";
+        });
+        advAsg2.addTransition(StateMachine.Event.WHILE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or parenthesis or an operator.";
+        });
+        advAsg2.addTransition(StateMachine.Event.OPEN_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or parenthesis or an operator.";
+        });
+        advAsg2.addTransition(StateMachine.Event.CLOSE_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come a value such as a number, a character or 'true' or 'false' or identifier or parenthesis or an operator.";
+        });
+
 
         cond.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), cond1, (stateful, event, args) ->
                 stateful.parenthesisNumber++);
+        cond.addTransition(StateMachine.Event.UNKNOWN.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Unknown token : '" + ((Token)args[0]).value + "'";
+        });
+        cond.addTransition(StateMachine.Event.KEYWORD_VAR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+        cond.addTransition(StateMachine.Event.ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+        cond.addTransition(StateMachine.Event.ADVANCED_ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+        cond.addTransition(StateMachine.Event.COMPUTABLE_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+        cond.addTransition(StateMachine.Event.IDENTIFIER.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+        cond.addTransition(StateMachine.Event.VALUE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+        cond.addTransition(StateMachine.Event.COMMA.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+        cond.addTransition(StateMachine.Event.SEMICOLON.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+        cond.addTransition(StateMachine.Event.CLOSE_PARENTHESIS.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+        cond.addTransition(StateMachine.Event.IF.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+        cond.addTransition(StateMachine.Event.ELSE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+        cond.addTransition(StateMachine.Event.WHILE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+        cond.addTransition(StateMachine.Event.OPEN_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+        cond.addTransition(StateMachine.Event.CLOSE_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+
         cond1.addTransition(StateMachine.Event.VALUE.toString(), cond1, (stateful, event, args) -> stateful.expression.add((Token)args[0]));
+        cond1.addTransition(StateMachine.Event.IDENTIFIER.toString(), cond1, (stateful, event, args) -> stateful.expression.add((Token)args[0]));
+
         cond1.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), cond1, (stateful, event, args) -> {
             stateful.parenthesisNumber++;
             stateful.expression.add((Token)args[0]);
@@ -150,12 +708,95 @@ public class CodeGenerator {
                         return new StateActionPairImpl<>(cond1, null);
                     }
                 });
+        cond1.addTransition(StateMachine.Event.UNKNOWN.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Unknown token : '" + ((Token)args[0]).value + "'";
+        });
+        cond1.addTransition(StateMachine.Event.KEYWORD_VAR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an parenthesis or identifier or values or operator.";
+        });
+        cond1.addTransition(StateMachine.Event.ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an parenthesis or identifier or values or operator.";
+        });
+        cond1.addTransition(StateMachine.Event.ADVANCED_ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an parenthesis or identifier or values or operator.";
+        });
+        cond1.addTransition(StateMachine.Event.COMMA.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an parenthesis or identifier or values or operator.";
+        });
+        cond1.addTransition(StateMachine.Event.SEMICOLON.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an parenthesis or identifier or values or operator.";
+        });
+        cond1.addTransition(StateMachine.Event.IF.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an parenthesis or identifier or values or operator.";
+        });
+        cond1.addTransition(StateMachine.Event.ELSE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an parenthesis or identifier or values or operator.";
+        });
+        cond1.addTransition(StateMachine.Event.WHILE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an parenthesis or identifier or values or operator.";
+        });
+        cond1.addTransition(StateMachine.Event.OPEN_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an parenthesis or identifier or values or operator.";
+        });
+        cond1.addTransition(StateMachine.Event.CLOSE_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an parenthesis or identifier or values or operator.";
+        });
+
 
         cond2.addTransition(StateMachine.Event.OPEN_BRACE.toString(), cond3, (stateful, event, args) -> {
             int resultPlace = opCodeGenerator.calculateExpression(stateful.expression);
             opCodeGenerator.loadMem(resultPlace, "00");
             stateful.braceNumber++;
         });
+        cond2.addTransition(StateMachine.Event.UNKNOWN.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Unknown token : '" + ((Token)args[0]).value + "'";
+        });
+        cond2.addTransition(StateMachine.Event.CLOSE_PARENTHESIS.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come open brace or semicolon or 'if', 'while', ...";
+        });
+        cond2.addTransition(StateMachine.Event.ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come open brace or semicolon or 'if', 'while', ...";
+        });
+        cond2.addTransition(StateMachine.Event.ADVANCED_ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come open brace or semicolon or 'if', 'while', ...";
+        });
+        cond2.addTransition(StateMachine.Event.COMPUTABLE_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come open brace or semicolon or 'if', 'while', ...";
+        });
+        cond2.addTransition(StateMachine.Event.COMMA.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come open brace or semicolon or 'if', 'while', ...";
+        });
+        cond2.addTransition(StateMachine.Event.VALUE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come open brace or semicolon or 'if', 'while', ...";
+        });
+        cond2.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come open brace or semicolon or 'if', 'while', ...";
+        });
+        cond2.addTransition(StateMachine.Event.CLOSE_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come open brace or semicolon or 'if', 'while', ...";
+        });
+
+
 
         addNestedTransitions(cond3, cond3);
 
@@ -172,12 +813,28 @@ public class CodeGenerator {
                 return new StateActionPairImpl<>(cond3, null);
             }
         });
+        cond3.addTransition(StateMachine.Event.UNKNOWN.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Unknown token : '" + ((Token)args[0]).value + "'";
+        });
 
         addEveryTransitionsExceptBracesAndSemicolonAndCalcExp(cond2, extraCond);
         cond2.addTransition(StateMachine.Event.SEMICOLON.toString(), cond4); // if is empty
 
         addEveryTransitionsExceptBracesAndSemicolon(extraCond, extraCond);
         extraCond.addTransition(StateMachine.Event.SEMICOLON.toString(), cond4);
+        extraCond.addTransition(StateMachine.Event.UNKNOWN.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Unknown token : '" + ((Token)args[0]).value + "'";
+        });
+        extraCond.addTransition(StateMachine.Event.OPEN_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here.";
+        });
+        extraCond.addTransition(StateMachine.Event.CLOSE_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here.";
+        });
 
         cond4.addTransition(StateMachine.Event.ELSE.toString(), cond5, (stateful, event, args) -> {
             opCodeGenerator.loadNum(0, "01");
@@ -211,8 +868,16 @@ public class CodeGenerator {
                     stateful.variables.add((IdentifierToken) args[0]);
                 }
         );
+        cond4.addTransition(StateMachine.Event.UNKNOWN.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Unknown token : '" + ((Token)args[0]).value + "'";
+        });
 
         cond5.addTransition(StateMachine.Event.OPEN_BRACE.toString(), elseCond, (stateful, event, args) -> stateful.braceNumber++);
+        cond5.addTransition(StateMachine.Event.UNKNOWN.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Unknown token : '" + ((Token)args[0]).value + "'";
+        });
 
         addNestedTransitions(elseCond, elseCond);
         elseCond.addTransition(StateMachine.Event.OPEN_BRACE.toString(), elseCond, (stateful, event, args) -> {
@@ -233,11 +898,48 @@ public class CodeGenerator {
                 return new StateActionPairImpl<>(elseCond, null);
             }
         });
+        elseCond.addTransition(StateMachine.Event.UNKNOWN.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Unknown token : '" + ((Token)args[0]).value + "'";
+        });
 
         addEveryTransitionsExceptBracesAndSemicolon(cond5, elseExtraCond);
         cond5.addTransition(StateMachine.Event.SEMICOLON.toString(), start, (stateful, event, args) ->
             stateful.nestedTokens.clear()
         ); // else is empty
+        cond5.addTransition(StateMachine.Event.CLOSE_PARENTHESIS.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come open brace or semicolon or 'if', 'while', ...";
+        });
+        cond5.addTransition(StateMachine.Event.ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come open brace or semicolon or 'if', 'while', ...";
+        });
+        cond5.addTransition(StateMachine.Event.ADVANCED_ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come open brace or semicolon or 'if', 'while', ...";
+        });
+        cond5.addTransition(StateMachine.Event.COMPUTABLE_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come open brace or semicolon or 'if', 'while', ...";
+        });
+        cond5.addTransition(StateMachine.Event.COMMA.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come open brace or semicolon or 'if', 'while', ...";
+        });
+        cond5.addTransition(StateMachine.Event.VALUE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come open brace or semicolon or 'if', 'while', ...";
+        });
+        cond5.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come open brace or semicolon or 'if', 'while', ...";
+        });
+        cond5.addTransition(StateMachine.Event.CLOSE_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come open brace or semicolon or 'if', 'while', ...";
+        });
+
 
         addEveryTransitionsExceptBracesAndSemicolon(elseExtraCond, elseExtraCond);
         elseExtraCond.addTransition(StateMachine.Event.SEMICOLON.toString(), start, (stateful, event, args) -> {
@@ -247,14 +949,82 @@ public class CodeGenerator {
             outputOpcodes.add(OPCode.getOpcode(OPCode.OPCODE_16_I.BRZ, OPCodeGenerator.toBin(nestedRes.size() + 1/*after instructions*/, 8)));
             outputOpcodes.addAll(nestedRes);
         });
+        elseExtraCond.addTransition(StateMachine.Event.UNKNOWN.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Unknown token : '" + ((Token)args[0]).value + "'";
+        });
+
 
         while0.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), while1, (stateful, event, args) -> {
                 stateful.parenthesisNumber++;
                 stateful.whileExpressionOpcodes.clear();
         });
+        while0.addTransition(StateMachine.Event.UNKNOWN.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Unknown token : '" + ((Token)args[0]).value + "'";
+        });
+        while0.addTransition(StateMachine.Event.KEYWORD_VAR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+        while0.addTransition(StateMachine.Event.ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+        while0.addTransition(StateMachine.Event.ADVANCED_ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+        while0.addTransition(StateMachine.Event.COMPUTABLE_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+        while0.addTransition(StateMachine.Event.IDENTIFIER.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+        while0.addTransition(StateMachine.Event.VALUE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+        while0.addTransition(StateMachine.Event.COMMA.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+        while0.addTransition(StateMachine.Event.SEMICOLON.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+        while0.addTransition(StateMachine.Event.CLOSE_PARENTHESIS.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+        while0.addTransition(StateMachine.Event.IF.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+        while0.addTransition(StateMachine.Event.ELSE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+        while0.addTransition(StateMachine.Event.WHILE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+        while0.addTransition(StateMachine.Event.OPEN_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+        while0.addTransition(StateMachine.Event.CLOSE_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an open parenthesis.";
+        });
+
 
         while1.addTransition(StateMachine.Event.VALUE.toString(), while1, (stateful, event, args) ->
                                 stateful.expression.add((Token)args[0]));
+        while1.addTransition(StateMachine.Event.VALUE.toString(), while1, (stateful, event, args) ->
+                stateful.expression.add((Token)args[0]));
         while1.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), while1, (stateful, event, args) -> {
             stateful.parenthesisNumber++;
             stateful.expression.add((Token)args[0]);
@@ -270,6 +1040,51 @@ public class CodeGenerator {
             }
         });
 
+        while1.addTransition(StateMachine.Event.UNKNOWN.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Unknown token : '" + ((Token)args[0]).value + "'";
+        });
+        while1.addTransition(StateMachine.Event.KEYWORD_VAR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an parenthesis or identifier or values or operator.";
+        });
+        while1.addTransition(StateMachine.Event.ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an parenthesis or identifier or values or operator.";
+        });
+        while1.addTransition(StateMachine.Event.ADVANCED_ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an parenthesis or identifier or values or operator.";
+        });
+        while1.addTransition(StateMachine.Event.COMMA.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an parenthesis or identifier or values or operator.";
+        });
+        while1.addTransition(StateMachine.Event.SEMICOLON.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an parenthesis or identifier or values or operator.";
+        });
+        while1.addTransition(StateMachine.Event.IF.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an parenthesis or identifier or values or operator.";
+        });
+        while1.addTransition(StateMachine.Event.ELSE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an parenthesis or identifier or values or operator.";
+        });
+        while1.addTransition(StateMachine.Event.WHILE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an parenthesis or identifier or values or operator.";
+        });
+        while1.addTransition(StateMachine.Event.OPEN_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an parenthesis or identifier or values or operator.";
+        });
+        while1.addTransition(StateMachine.Event.CLOSE_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come an parenthesis or identifier or values or operator.";
+        });
+
         while2.addTransition(StateMachine.Event.SEMICOLON.toString(), start/*,
                 (stateful, event, args) -> stateful.whileExpression.clear()*/);
         while2.addTransition(StateMachine.Event.OPEN_BRACE.toString(), while3, (stateful, event, args) -> {
@@ -278,6 +1093,45 @@ public class CodeGenerator {
             expressionOpcodeGenerator.loadMem(resultPlace, "00");
             stateful.braceNumber++;
         });
+        while2.addTransition(StateMachine.Event.UNKNOWN.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Unknown token : '" + ((Token)args[0]).value + "'";
+        });
+        while2.addTransition(StateMachine.Event.CLOSE_PARENTHESIS.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come open brace or semicolon or 'if', 'while', ...";
+        });
+        while2.addTransition(StateMachine.Event.ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come open brace or semicolon or 'if', 'while', ...";
+        });
+        while2.addTransition(StateMachine.Event.ADVANCED_ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come open brace or semicolon or 'if', 'while', ...";
+        });
+        while2.addTransition(StateMachine.Event.COMPUTABLE_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come open brace or semicolon or 'if', 'while', ...";
+        });
+        while2.addTransition(StateMachine.Event.COMMA.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come open brace or semicolon or 'if', 'while', ...";
+        });
+        while2.addTransition(StateMachine.Event.VALUE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come open brace or semicolon or 'if', 'while', ...";
+        });
+        while2.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come open brace or semicolon or 'if', 'while', ...";
+        });
+        while2.addTransition(StateMachine.Event.CLOSE_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come open brace or semicolon or 'if', 'while', ...";
+        });
+
+
+
 
         addNestedTransitions(while3, while3);
 
@@ -306,6 +1160,40 @@ public class CodeGenerator {
                 return new StateActionPairImpl<>(while3, null);
             }
         });
+        while3.addTransition(StateMachine.Event.UNKNOWN.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Unknown token : '" + ((Token)args[0]).value + "'";
+        });
+
+        addEveryTransitionsExceptBracesAndSemicolonAndCalcExp(while2, extraWhile);
+
+        addEveryTransitionsExceptBracesAndSemicolon(extraWhile, extraWhile);
+        extraWhile.addTransition(StateMachine.Event.SEMICOLON.toString(), start, (stateful, event, args) -> {
+            ArrayList<String> nestedRes = new ArrayList<>();
+            (new CodeGenerator(stateful.nestedTokens, nestedRes, fsm.getName() + "_nesting")).generate();
+            stateful.nestedTokens.clear();
+
+            outputOpcodes.addAll(stateful.whileExpressionOpcodes);
+            opCodeGenerator.loadNum(0, "01");
+            outputOpcodes.add(OPCode.getOpcode(OPCode.OPCODE_8_DS.CMP, "00", "01"));
+            outputOpcodes.add(OPCode.getOpcode(OPCode.OPCODE_16_I.BRZ, OPCodeGenerator.toBin(nestedRes.size() + 2/*jump ins, nested inss*/, 8)));
+            outputOpcodes.addAll(nestedRes);
+            outputOpcodes.add(OPCode.getOpcode(OPCode.OPCODE_16_I.JPR,
+                    OPCodeGenerator.toBin(-(nestedRes.size() + 4 + stateful.whileExpressionOpcodes.size()), 8)));
+
+        });
+        extraWhile.addTransition(StateMachine.Event.UNKNOWN.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Unknown token : '" + ((Token)args[0]).value + "'";
+        });
+        extraWhile.addTransition(StateMachine.Event.OPEN_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here.";
+        });
+        extraWhile.addTransition(StateMachine.Event.CLOSE_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here.";
+        });
 
         states.add(start);
         states.add(def);
@@ -331,6 +1219,7 @@ public class CodeGenerator {
         states.add(while2);
         states.add(while3);
         states.add(extraWhile);
+        states.add(error);
 
         persister = new MemoryPersisterImpl<>(states, start);
         fsm = new FSM(nameSpace, persister);
@@ -346,6 +1235,56 @@ public class CodeGenerator {
         state.addTransition(StateMachine.Event.IF.toString(), cond, defaultAction);
         state.addTransition(StateMachine.Event.WHILE.toString(), while0, defaultAction);
         state.addTransition(StateMachine.Event.SEMICOLON.toString(), state);
+
+        state.addTransition(StateMachine.Event.UNKNOWN.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Unknown token : '" + ((Token)args[0]).value + "'";
+        });
+        state.addTransition(StateMachine.Event.ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come 'int', 'char', 'boolean' , an identifier," +
+                    " 'if', 'while' or a semicolon.";
+        });
+        state.addTransition(StateMachine.Event.ADVANCED_ASSIGN_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come 'int', 'char', 'boolean' , an identifier," +
+                    " 'if', 'while' or a semicolon.";
+        });
+        state.addTransition(StateMachine.Event.COMPUTABLE_OPERATOR.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come 'int', 'char', 'boolean' , an identifier," +
+                    " 'if', 'while' or a semicolon.";
+        });
+        state.addTransition(StateMachine.Event.VALUE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come 'int', 'char', 'boolean' , an identifier," +
+                    " 'if', 'while' or a semicolon.";
+        });
+        state.addTransition(StateMachine.Event.COMMA.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come 'int', 'char', 'boolean' , an identifier," +
+                    " 'if', 'while' or a semicolon.";
+        });
+        state.addTransition(StateMachine.Event.OPEN_PARENTHESIS.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come 'int', 'char', 'boolean' , an identifier," +
+                    " 'if', 'while' or a semicolon.";
+        });
+        state.addTransition(StateMachine.Event.CLOSE_PARENTHESIS.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come 'int', 'char', 'boolean' , an identifier," +
+                    " 'if', 'while' or a semicolon.";
+        });
+        state.addTransition(StateMachine.Event.OPEN_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come 'int', 'char', 'boolean' , an identifier," +
+                    " 'if', 'while' or a semicolon.";
+        });
+        state.addTransition(StateMachine.Event.CLOSE_BRACE.toString(), error, (stateful, event, args) -> {
+            stateful.errorMsg = "Syntax Error in token number " + ClassifiedData.getInstance().tokens.indexOf(args[0]) +
+                    "\n Shouldn't be '" + ((Token)args[0]).value + "' in here. Here can come 'int', 'char', 'boolean' , an identifier," +
+                    " 'if', 'while' or a semicolon.";
+        });
     }
 
     private void addNestedTransitions(State<StateMachine> state, State<StateMachine> targetState){ // Any token except Braces
@@ -518,7 +1457,7 @@ public class CodeGenerator {
 
 
 
-    public void generate(){
+    public StateMachine generate(){
         StateMachine theStateMachine = new StateMachine();
         for(Token token : inputTokens){
             try {
@@ -527,6 +1466,8 @@ public class CodeGenerator {
                 e.printStackTrace();
             }
         }
+
+        return theStateMachine;
     }
 
 }

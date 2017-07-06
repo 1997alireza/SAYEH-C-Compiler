@@ -1,7 +1,9 @@
 package src;
 
+import org.apache.log4j.BasicConfigurator;
 import src.Analyze.Lexical.LexicalAnalyzer;
 import src.CodeGeneration.CodeGenerator;
+import src.CodeGeneration.FSM.StateMachine;
 
 import java.util.ArrayList;
 
@@ -13,13 +15,21 @@ public class Main {
         LexicalAnalyzer.removeComments(sourceDir, "test1.c");
         LexicalAnalyzer.tokenize();
 
-        ArrayList<String> opcodes = new ArrayList<>();
-        (new CodeGenerator(ClassifiedData.getInstance().tokens,
-                                    opcodes, "base generator")).generate();
-        ClassifiedData.getInstance().addOpcodes(opcodes);
+        BasicConfigurator.configure();
 
-        for(String op : ClassifiedData.getInstance().getOpcodes()) {
-            System.out.println(op);
+        ArrayList<String> opcodes = new ArrayList<>();
+        StateMachine theResult = (new CodeGenerator(ClassifiedData.getInstance().tokens,
+                                    opcodes, "base generator")).generate();
+
+        if(theResult.errorMsg == null) {
+            ClassifiedData.getInstance().addOpcodes(opcodes);
+
+            for (String op : ClassifiedData.getInstance().getOpcodes()) {
+                System.out.println(op);
+            }
+        }
+        else {
+            System.err.println(theResult.errorMsg);
         }
 
 

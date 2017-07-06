@@ -19,6 +19,8 @@ public class StateMachine {
 
     public int parenthesisNumber = 0, braceNumber = 0;
 
+    public String errorMsg = null;
+
 
     public String getState() {
         return state;
