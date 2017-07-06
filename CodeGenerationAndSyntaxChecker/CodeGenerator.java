@@ -1,4 +1,4 @@
-package src.CodeGeneration;
+package src.CodeGenerationAndSyntaxChecker;
 
 import org.statefulj.fsm.FSM;
 import org.statefulj.fsm.RetryException;
@@ -9,7 +9,7 @@ import org.statefulj.fsm.model.impl.StateImpl;
 import org.statefulj.fsm.model.State;
 import org.statefulj.persistence.memory.MemoryPersisterImpl;
 import src.ClassifiedData;
-import src.CodeGeneration.FSM.StateMachine;
+import src.CodeGenerationAndSyntaxChecker.FSM.StateMachine;
 import src.Token.IdentifierToken;
 import src.Token.OperatorToken;
 import src.Token.PunctuationToken;

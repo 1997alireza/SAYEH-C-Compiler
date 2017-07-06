@@ -2,8 +2,8 @@ package src;
 
 import org.apache.log4j.BasicConfigurator;
 import src.Analyze.Lexical.LexicalAnalyzer;
-import src.CodeGeneration.CodeGenerator;
-import src.CodeGeneration.FSM.StateMachine;
+import src.CodeGenerationAndSyntaxChecker.CodeGenerator;
+import src.CodeGenerationAndSyntaxChecker.FSM.StateMachine;
 
 import java.util.ArrayList;
 

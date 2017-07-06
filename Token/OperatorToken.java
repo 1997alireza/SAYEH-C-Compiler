@@ -1,6 +1,6 @@
 package src.Token;
 
-import src.CodeGeneration.FSM.StateMachine;
+import src.CodeGenerationAndSyntaxChecker.FSM.StateMachine;
 
 public class OperatorToken extends Token {
     public OperatorToken(String value) {

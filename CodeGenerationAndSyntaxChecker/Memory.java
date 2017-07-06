@@ -1,4 +1,4 @@
-package src.CodeGeneration;
+package src.CodeGenerationAndSyntaxChecker;
 
 public class Memory {
     private static final int SAYEH_MEMORY_SIZE = 1024;

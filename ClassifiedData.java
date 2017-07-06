@@ -1,7 +1,7 @@
 package src;
 
 import src.Analyze.Utilies.CFileReader;
-import src.CodeGeneration.OPCode;
+import src.CodeGenerationAndSyntaxChecker.OPCode;
 import src.Token.Token;
 
 import java.util.ArrayList;

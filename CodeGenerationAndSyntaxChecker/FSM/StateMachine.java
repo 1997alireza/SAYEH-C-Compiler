@@ -1,7 +1,6 @@
-package src.CodeGeneration.FSM;
+package src.CodeGenerationAndSyntaxChecker.FSM;
 
 import org.statefulj.persistence.annotations.State;
-import src.CodeGeneration.OPCode;
 import src.Token.IdentifierToken;
 import src.Token.Token;
 

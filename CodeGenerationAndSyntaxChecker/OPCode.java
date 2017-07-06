@@ -1,4 +1,4 @@
-package src.CodeGeneration;
+package src.CodeGenerationAndSyntaxChecker;
 
 public class OPCode {
     public enum OPCODE_8 {

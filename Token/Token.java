@@ -1,6 +1,6 @@
 package src.Token;
 
-import src.CodeGeneration.FSM.StateMachine;
+import src.CodeGenerationAndSyntaxChecker.FSM.StateMachine;
 
 public class Token {
     public enum TOKEN_TYPE {Keyword, Identifier, Number, Character, Operator, Punctuation, Unknown};

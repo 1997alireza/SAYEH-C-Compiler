@@ -1,4 +1,4 @@
-package src.CodeGeneration;
+package src.CodeGenerationAndSyntaxChecker;
 
 import src.Token.*;
 
