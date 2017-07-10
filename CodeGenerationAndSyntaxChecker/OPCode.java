@@ -53,7 +53,7 @@ public class OPCode {
         ADD("1011"),
         SUB("1100"),
         MUL("1101"),
-        DIV("1101"), // TODO : SAYEH hasn't this instruction
+        DIV("1101"), // SAYEH hasn't this instruction yet :(
         CMP("1110");
 
         private String opcode;
